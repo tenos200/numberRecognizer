@@ -8,6 +8,9 @@ from torchvision.transforms import ToTensor, Lambda, Compose
 from torchvision.transforms import transforms
 from torch.autograd import Variable
 import torch.nn.functional as F
+import random
+import os
+import pygame as pg
 
 
 # 1.design model (input, output size, forward pass)
@@ -24,7 +27,7 @@ class Model(nn.Module):
         out = self.l3(out)
         return out 
 
-def run():
+def runModel():
     #0.1
     #we define the dimensions of the input 28*28 and all possible labels from 0-9 i.e, 10 labels
     input_size = 784 
@@ -43,10 +46,11 @@ def run():
     # 2.construct loss and optimizer
     learning_rate = 0.001
     criterion = torch.nn.CrossEntropyLoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+    #we can use SGD to Adam depening of what we want to do there
+    optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)
 
     # 3.training loop
-    epochs = 10 
+    epochs = 50 
     for epoch in range(epochs):
         for i, (images, labels) in enumerate(trainloader):
             optimizer.zero_grad()
@@ -75,48 +79,66 @@ def run():
     print(f'Accuracy = {accuracy}')
     torch.save(model, './models/NNmodel.pth')
 
+
+def pygameRunner(model):
+    
+    run = True
+    drawing = False 
+    width = 400
+    height = 400
+    pg.init()
+    clock = pg.time.Clock()
+
+    #set up the size of the window
+    window = pg.display.set_mode((width, height))
+    #set background color to black
+    window.fill((0,0,0))
+    #set window title
+    pg.display.set_caption('MNIST recognizer')
+
+    #pygame event loop
+    pg.display.update()
+    while run:
+        for event in pg.event.get():
+            if event.type == pg.QUIT:
+                #pg.image.save(window, 'test.jpg')
+                pg.quit()
+                run = False
+                return False
+            if event.type == pg.MOUSEBUTTONDOWN:
+                drawing = True
+            if event.type == pg.MOUSEBUTTONUP:
+                drawing = False 
+            if event.type == pg.MOUSEMOTION:
+                if drawing:
+                    x, y = pg.mouse.get_pos()
+                    #sort a better way to draw
+                    for i in range(5):
+                        window.set_at((x, y),(255, 255, 255))
+                        window.set_at((x-i, y-i),(255, 255, 255))
+                        window.set_at((x+i, y+i),(255, 255, 255))
+
+        pg.display.flip()
+        clock.tick(60)
+
+
 if __name__ == "__main__":                                   
-    #run function                                            
-    if torch.load('./models/NNmodel.pth'):
+    try:
+        #run function                                            
         model = torch.load('./models/NNmodel.pth')
         model.eval()
-        print('Loaded!')
-        #we want to use this a representation of what the input will be later on 
-        
-        test = [[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0], 
-                [0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0], 
-                [0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[1],[1],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0], 
-                [0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[1],[1],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0], 
-                [0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[1],[1],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0], 
-                [0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[1],[1],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0], 
-                [0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[1],[1],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0], 
-                [0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[1],[1],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0], 
-                [0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[1],[1],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0], 
-                [0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[1],[1],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0], 
-                [0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[1],[1],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0], 
-                [0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[1],[1],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0], 
-                [0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[1],[1],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0], 
-                [0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[1],[1],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0], 
-                [0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[1],[1],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0], 
-                [0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[1],[1],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0], 
-                [0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[1],[1],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0], 
-                [0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[1],[1],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0], 
-                [0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[1],[1],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0], 
-                [0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[1],[1],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0], 
-                [0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[1],[1],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0], 
-                [0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[1],[1],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0], 
-                [0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[1],[1],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0], 
-                [0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[1],[1],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0], 
-                [0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[1],[1],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0], 
-                [0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[1],[1],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0], 
-                [0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[1],[1],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0], 
-                [0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[1],[1],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0], 
-                ]
-        input_test = torch.tensor(test).float()
-        tester = input_test.reshape(-1, 28*28)
+        print('Loaded successfully!')
+        ret = pygameRunner(model)
+        if not ret:
+            os._exit(1)
+
+        '''
         with torch.no_grad():
             output = model(tester)
             predictions = torch.max(output, 1)
             print(f'Prediction = {predictions}')
-    else:
-        run()                                                    
+        '''
+    #if the model is not loaded then we train the model
+    except:
+        print('failed')
+        #runModel()                                                    
