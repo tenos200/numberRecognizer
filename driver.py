@@ -52,7 +52,7 @@ def runModel():
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
     # 3.training loop
-    epochs = 50 
+    epochs = 100 
     for epoch in range(epochs):
         for i, (images, labels) in enumerate(trainloader):
             optimizer.zero_grad()
@@ -82,8 +82,10 @@ def runModel():
     torch.save(model, './models/NNmodel.pth')
 
 
-def pygameRunner(model):
+def pygameRunner():
     
+    #load the model
+    model = torch.load('./models/NNmodel.pth')
     run = True
     drawing = False 
     width = 400
@@ -100,6 +102,8 @@ def pygameRunner(model):
 
     #pygame event loop
     pg.display.update()
+    mouse_pos = (0, 0)
+    last_position = None
     while run:
         for event in pg.event.get():
             if event.type == pg.QUIT:
@@ -111,51 +115,47 @@ def pygameRunner(model):
                 drawing = True
             if event.type == pg.MOUSEBUTTONUP:
                 drawing = False 
+                last_position = None
             if event.type == pg.MOUSEMOTION:
                 if drawing:
-                    x, y = pg.mouse.get_pos()
-                    #sort a better way to draw
-                    line = pg.draw.line(window, (255, 255, 255), (x, y), (x+2, y+2), width=10)
+                    mouse_pos = pg.mouse.get_pos()
+                    #we use a circle to draw because it allows us to get better pixel density, this can still needs to be improved
+                    pg.draw.circle(window, (255, 255, 255), mouse_pos, 10)
+
             if event.type == pg.KEYDOWN:
                 if event.key == pg.K_c:
                     window.fill((0, 0, 0))
                 if event.key == pg.K_g:
+
+                    #save image and then open Image for use, alternative way is to get 3d surface then flip it 
                     pg.image.save(window, 'test.jpg')
-                    #turn into nparray
                     img = Image.open('test.jpg')
+
+                    #transform the image to correct format to be passed
                     transform = transforms.Compose([
-                            transforms.Grayscale(),
-                            transforms.Resize((28, 28)),
-                            transforms.ToTensor(),
-                            ])
-                    image_transformed = transform(img).unsqueeze(0)
-                    img = image_transformed.view(1, 784)
+                        transforms.Grayscale(),
+                        transforms.Resize((28,28)),
+                        transforms.ToTensor()
+                        ])
+                    transformed_img = transform(img).unsqueeze(0)
+                    img = transformed_img.view(1, 784)
                     model.eval()
                     output = model(img)
                     predictions = torch.max(output, 1)
-                    print(f'Prediction = {predictions}')
-
+                    print(f'Prediction = {predictions[1].item()}')
 
         pg.display.flip()
         clock.tick(60)
 
-
 if __name__ == "__main__":                                   
-    #try:
-    #run function                                            
-    model = torch.load('./models/NNmodel.pth')
-    print('Loaded successfully!')
-    ret = pygameRunner(model)
-    if not ret:
-        os._exit(1)
+    try:
+        #run function                                            
+        print('Loaded successfully!')
+        ret = pygameRunner()
+        if not ret:
+            os._exit(1)
 
-    '''
-    with torch.no_grad():
-        output = model(tester)
-        predictions = torch.max(output, 1)
-        print(f'Prediction = {predictions}')
-    '''
     #if the model is not loaded then we train the model
-    #except:
-        #print('failed')
-        #runModel()                                                    
+    except:
+        print('failed')
+        runModel()                                                    
