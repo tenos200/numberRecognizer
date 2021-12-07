@@ -11,6 +11,8 @@ import torch.nn.functional as F
 import random
 import os
 import pygame as pg
+import PIL
+from PIL import Image
 
 
 # 1.design model (input, output size, forward pass)
@@ -47,7 +49,7 @@ def runModel():
     learning_rate = 0.001
     criterion = torch.nn.CrossEntropyLoss()
     #we can use SGD to Adam depening of what we want to do there
-    optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)
+    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
     # 3.training loop
     epochs = 50 
@@ -113,32 +115,47 @@ def pygameRunner(model):
                 if drawing:
                     x, y = pg.mouse.get_pos()
                     #sort a better way to draw
-                    for i in range(5):
-                        window.set_at((x, y),(255, 255, 255))
-                        window.set_at((x-i, y-i),(255, 255, 255))
-                        window.set_at((x+i, y+i),(255, 255, 255))
+                    line = pg.draw.line(window, (255, 255, 255), (x, y), (x+2, y+2), width=10)
+            if event.type == pg.KEYDOWN:
+                if event.key == pg.K_c:
+                    window.fill((0, 0, 0))
+                if event.key == pg.K_g:
+                    pg.image.save(window, 'test.jpg')
+                    #turn into nparray
+                    img = Image.open('test.jpg')
+                    transform = transforms.Compose([
+                            transforms.Grayscale(),
+                            transforms.Resize((28, 28)),
+                            transforms.ToTensor(),
+                            ])
+                    image_transformed = transform(img).unsqueeze(0)
+                    img = image_transformed.view(1, 784)
+                    model.eval()
+                    output = model(img)
+                    predictions = torch.max(output, 1)
+                    print(f'Prediction = {predictions}')
+
 
         pg.display.flip()
         clock.tick(60)
 
 
 if __name__ == "__main__":                                   
-    try:
-        #run function                                            
-        model = torch.load('./models/NNmodel.pth')
-        model.eval()
-        print('Loaded successfully!')
-        ret = pygameRunner(model)
-        if not ret:
-            os._exit(1)
+    #try:
+    #run function                                            
+    model = torch.load('./models/NNmodel.pth')
+    print('Loaded successfully!')
+    ret = pygameRunner(model)
+    if not ret:
+        os._exit(1)
 
-        '''
-        with torch.no_grad():
-            output = model(tester)
-            predictions = torch.max(output, 1)
-            print(f'Prediction = {predictions}')
-        '''
+    '''
+    with torch.no_grad():
+        output = model(tester)
+        predictions = torch.max(output, 1)
+        print(f'Prediction = {predictions}')
+    '''
     #if the model is not loaded then we train the model
-    except:
-        print('failed')
+    #except:
+        #print('failed')
         #runModel()                                                    
