@@ -92,18 +92,16 @@ def pygameRunner():
     height = 400
     pg.init()
     clock = pg.time.Clock()
-
+    #set window title
+    pg.display.set_caption('MNIST recognizer')
     #set up the size of the window
     window = pg.display.set_mode((width, height))
     #set background color to black
     window.fill((0,0,0))
     #set window title
-    pg.display.set_caption('MNIST recognizer')
+    mouse_pos = (0, 0)
 
     #pygame event loop
-    pg.display.update()
-    mouse_pos = (0, 0)
-    last_position = None
     while run:
         for event in pg.event.get():
             if event.type == pg.QUIT:
@@ -121,7 +119,6 @@ def pygameRunner():
                     mouse_pos = pg.mouse.get_pos()
                     #we use a circle to draw because it allows us to get better pixel density, this can still needs to be improved
                     pg.draw.circle(window, (255, 255, 255), mouse_pos, 10)
-
             if event.type == pg.KEYDOWN:
                 if event.key == pg.K_c:
                     window.fill((0, 0, 0))
@@ -144,7 +141,7 @@ def pygameRunner():
                     predictions = torch.max(output, 1)
                     print(f'Prediction = {predictions[1].item()}')
 
-        pg.display.flip()
+        pg.display.update()
         clock.tick(60)
 
 if __name__ == "__main__":                                   
