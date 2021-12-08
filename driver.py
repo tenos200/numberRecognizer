@@ -49,10 +49,10 @@ def runModel():
     learning_rate = 0.001
     criterion = torch.nn.CrossEntropyLoss()
     #we can use SGD to Adam depening of what we want to do there
-    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+    optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)
 
     # 3.training loop
-    epochs = 100 
+    epochs = 300 
     for epoch in range(epochs):
         for i, (images, labels) in enumerate(trainloader):
             optimizer.zero_grad()
