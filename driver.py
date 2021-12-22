@@ -10,6 +10,8 @@ from torch.autograd import Variable
 import torch.nn.functional as F
 import random
 import os
+import numpy as np
+import cv2
 import pygame as pg
 import PIL
 from PIL import Image
@@ -49,10 +51,10 @@ def runModel():
     learning_rate = 0.001
     criterion = torch.nn.CrossEntropyLoss()
     #we can use SGD to Adam depening of what we want to do there
-    optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)
+    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
     # 3.training loop
-    epochs = 300 
+    epochs = 200 
     for epoch in range(epochs):
         for i, (images, labels) in enumerate(trainloader):
             optimizer.zero_grad()
@@ -64,7 +66,7 @@ def runModel():
             loss.backward()
             # - update weights
             optimizer.step()
-            print(f'Epoch: {epoch+1} / {epochs}, Training_loss = {loss.item():.4f}')
+        print(f'Epoch: {epoch+1} / {epochs}, Training_loss = {loss.item():.4f}')
 
     #test model
     with torch.no_grad():
@@ -123,10 +125,13 @@ def pygameRunner():
                 if event.key == pg.K_c:
                     window.fill((0, 0, 0))
                 if event.key == pg.K_g:
-
                     #save image and then open Image for use, alternative way is to get 3d surface then flip it 
                     pg.image.save(window, 'test.jpg')
-                    img = Image.open('test.jpg')
+                    #we make use of open cv to dialate the image 
+                    img = cv2.imread('test.jpg', 1)
+                    kernel = np.ones((5, 5), 'uint8')
+                    img_erosion = cv2.dilate(img, kernel, iterations=6)
+                    im_pil = Image.fromarray(img_erosion)
 
                     #transform the image to correct format to be passed
                     transform = transforms.Compose([
@@ -134,7 +139,7 @@ def pygameRunner():
                         transforms.Resize((28,28)),
                         transforms.ToTensor()
                         ])
-                    transformed_img = transform(img).unsqueeze(0)
+                    transformed_img = transform(im_pil).unsqueeze(0)
                     img = transformed_img.view(1, 784)
                     model.eval()
                     output = model(img)
@@ -146,7 +151,7 @@ def pygameRunner():
 
 if __name__ == "__main__":                                   
     try:
-        #run function                                            
+    #run function                                            
         print('Loaded successfully!')
         ret = pygameRunner()
         if not ret:
