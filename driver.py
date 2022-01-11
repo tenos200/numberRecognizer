@@ -22,13 +22,16 @@ class Model(nn.Module):
     def __init__(self, input_size, output_size, class_digits):
         super(Model, self).__init__()
         self.l1 = nn.Linear(input_size, output_size)
-        #activation function 
         self.l2 = nn.ReLU()
-        self.l3 = nn.Linear(output_size, class_digits)
+        self.l3 = nn.Linear(output_size, 64)
+        self.l4 = nn.ReLU()
+        self.l5 = nn.Linear(64, class_digits)
     def forward(self, x):
         out = self.l1(x)
         out = self.l2(out)
         out = self.l3(out)
+        out = self.l4(out)
+        out = self.l5(out)
         return out 
 
 def runModel():
@@ -51,10 +54,10 @@ def runModel():
     learning_rate = 0.001
     criterion = torch.nn.CrossEntropyLoss()
     #we can use SGD to Adam depening of what we want to do there
-    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+    optimizer = torch.optim.Ada(model.parameters(), lr=learning_rate)
 
     # 3.training loop
-    epochs = 200 
+    epochs = 10 
     for epoch in range(epochs):
         for i, (images, labels) in enumerate(trainloader):
             optimizer.zero_grad()
@@ -130,7 +133,7 @@ def pygameRunner():
                     #we make use of open cv to dialate the image 
                     img = cv2.imread('test.jpg', 1)
                     kernel = np.ones((5, 5), 'uint8')
-                    img_erosion = cv2.dilate(img, kernel, iterations=6)
+                    img_erosion = cv2.dilate(img, kernel, iterations=4)
                     im_pil = Image.fromarray(img_erosion)
 
                     #transform the image to correct format to be passed
