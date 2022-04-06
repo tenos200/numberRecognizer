@@ -23,15 +23,23 @@ class Model(nn.Module):
         super(Model, self).__init__()
         self.l1 = nn.Linear(input_size, output_size)
         self.l2 = nn.ReLU()
-        self.l3 = nn.Linear(output_size, 64)
+        self.l3 = nn.Linear(output_size, 128)
         self.l4 = nn.ReLU()
-        self.l5 = nn.Linear(64, class_digits)
+        self.l5 = nn.Linear(128, 64)
+        self.l6 = nn.ReLU()
+        self.l7 = nn.Linear(64, 32)
+        self.l8 = nn.ReLU()
+        self.l9 = nn.Linear(32, class_digits)
     def forward(self, x):
         out = self.l1(x)
         out = self.l2(out)
         out = self.l3(out)
         out = self.l4(out)
         out = self.l5(out)
+        out = self.l6(out)
+        out = self.l7(out)
+        out = self.l8(out)
+        out = self.l9(out)
         return out 
 
 def runModel():
@@ -39,7 +47,7 @@ def runModel():
     #we define the dimensions of the input 28*28 and all possible labels from 0-9 i.e, 10 labels
     input_size = 784 
     class_digits = 10 
-    output_size = 100
+    output_size = 256 
 
     # 0. Load the data
     trainset = datasets.MNIST(r'./data', download=True, train=True, transform=transforms.ToTensor())
@@ -54,7 +62,7 @@ def runModel():
     learning_rate = 0.001
     criterion = torch.nn.CrossEntropyLoss()
     #we can use SGD to Adam depening of what we want to do there
-    optimizer = torch.optim.Ada(model.parameters(), lr=learning_rate)
+    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
     # 3.training loop
     epochs = 10 
